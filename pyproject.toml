@@ -1,0 +1,48 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "zzsn_backdoor_detection"
+version = "0.0.1"
+description = "Comparing a few detection methods"
+authors = [
+  { name = "Bart\u0142omiej Krajewski, Tomasz Sroka" },
+]
+license = { file = "LICENSE" }
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License"
+]
+dependencies = [
+    "loguru",
+    "pip",
+    "pytest",
+    "python-dotenv",
+    "ruff",
+    "tqdm",
+    "typer",
+
+    "kaggle",
+    "torch",
+    "torchvision",
+    "torchsummary",
+    "ipykernel",
+    "matplotlib"
+]
+requires-python = "~=3.12.0"
+
+
+[tool.ruff]
+line-length = 99
+src = ["zzsn_backdoor_detection"]
+include = ["pyproject.toml", "zzsn_backdoor_detection/**/*.py"]
+
+[tool.ruff.lint]
+extend-select = ["I"]  # Add import sorting
+
+[tool.ruff.lint.isort]
+known-first-party = ["zzsn_backdoor_detection"]
+force-sort-within-sections = true
+
