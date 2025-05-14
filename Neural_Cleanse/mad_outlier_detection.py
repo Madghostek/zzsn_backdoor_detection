@@ -17,16 +17,16 @@ import cv2
 #        PARAMETERS          #
 ##############################
 
-RESULT_DIR = 'results_Li_rn_tgt7_t0d10_r05_ep5'  # directory for storing results
+RESULT_DIR = 'results'  # directory for storing results
 IMG_FILENAME_TEMPLATE = 'gtsrb_visualize_%s_label_%d.png'  # image filename template for visualization results
 
 # input size
-IMG_ROWS = 32
-IMG_COLS = 32
+IMG_ROWS = 64
+IMG_COLS = 64
 IMG_COLOR = 3
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
-NUM_CLASSES = 43  # total number of classes in the model
+NUM_CLASSES = 4  # total number of classes in the model
 
 ##############################
 #      END PARAMETERS        #
