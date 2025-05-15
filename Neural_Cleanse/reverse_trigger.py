@@ -116,7 +116,7 @@ def make_class_directories(images_dir):
 
     for image_path in image_list:
         image_name = os.path.basename(image_path)
-        image_class = image_path.split("_")[1][0]
+        image_class = image_path.split(".jpeg")[0][-1]
         new_path = images_dir + "/" + image_class
         if(image_class not in classes):
             classes.append(image_class)
