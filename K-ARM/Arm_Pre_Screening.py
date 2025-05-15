@@ -7,7 +7,6 @@
 
 
 import torch 
-from torchvision import transforms
 from dataset import CustomDataSet
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
@@ -15,12 +14,8 @@ import numpy as np
 
 
 
-def Pre_Screening(args,model):
-    device = torch.device('cuda:%d'%args.device)
-    transform = transforms.Compose([
-        transforms.CenterCrop(args.input_width),
-        transforms.ToTensor()
-        ])
+def Pre_Screening(args,model, transform):
+    device = args.device
 
     dataset = CustomDataSet(args.examples_dirpath,transform=transform,triggered_classes =[])
     data_loader = DataLoader(dataset=dataset,batch_size = args.batch_size,shuffle=True,drop_last=False,num_workers=2,pin_memory=True)

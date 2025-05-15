@@ -1,6 +1,8 @@
 # define supporting functions
 
 import torch 
+import torchvision.models as models
+from torch import nn
 
 # print configurations
 def print_args(opt):
@@ -16,15 +18,15 @@ def print_args(opt):
 
 # load model on device, get number of classes
 def loading_models(args):
-    device = torch.device("cuda:%d" % args.device)
-    model = torch.load(args.model_filepath)
-    model.to(device)
-    model.eval()
-    sample_input = torch.zeros(1,args.channels,args.input_width,args.input_height).to(device)
-    sample_output = model(sample_input)
-    num_classes = sample_output.size(1)
+    
+    net = models.resnet50(weights = models.ResNet50_Weights.IMAGENET1K_V1)
+    net.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1, bias=False)
+    net.fc = nn.Linear(net.fc.in_features, args.num_classes)
+    net = net.to(args.device)
+    model = torch.load(args.model_filepath, map_location=args.device) #original
+    net.load_state_dict(model)
 
-    return model,num_classes
+    return net
 
 
 

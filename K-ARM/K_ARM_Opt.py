@@ -8,7 +8,6 @@
 
 
 import torch 
-from torchvision import transforms
 from dataset import CustomDataSet
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
@@ -19,13 +18,9 @@ from K_Arm_Scanner import *
 
 
 
-def K_Arm_Opt(args,target_classes_all,triggered_classes_all,trigger_type,model,direction):
+def K_Arm_Opt(args,target_classes_all,triggered_classes_all,trigger_type,model,direction, transform):
 
-    device = torch.device("cuda:%d" % args.device)
-    transform = transforms.Compose([
-        transforms.CenterCrop(args.input_width),
-        transforms.ToTensor()
-        ])
+    device = args.device
 
     data_loader_arr = []
     if triggered_classes_all is None:

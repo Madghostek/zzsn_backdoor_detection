@@ -5,7 +5,8 @@ import argparse
 import time 
 from utils import *
 from Arm_Pre_Screening import Pre_Screening
-from K_Arm_Opt import K_Arm_Opt
+from K_ARM_Opt import K_Arm_Opt
+from torchvision import transforms
 
 # set random seed
 SEED = 333
@@ -24,8 +25,8 @@ def main():
 
     parser = argparse.ArgumentParser(description='PyTorch K-ARM Backdoor Optimization')
     parser.add_argument('--device',type=int,default=0)
-    parser.add_argument('--input_width',type=int,default=224)
-    parser.add_argument('--input_height',type=int,default=224)
+    parser.add_argument('--input_width',type=int,default=64)
+    parser.add_argument('--input_height',type=int,default=64)
     parser.add_argument('--channels',type=int,default=3)
     parser.add_argument('--batch_size',type=int,default=32)
     parser.add_argument('--lr',type=float,default=1e-01)
@@ -36,7 +37,7 @@ def main():
     parser.add_argument('--patience',type=int,default=5)
     parser.add_argument('--cost_multiplier',type=float,default=1.5)
     parser.add_argument('--epsilon',type=float,default=1e-07)
-    parser.add_argument('--num_classes',type=int,default=0)
+    parser.add_argument('--num_classes',type=int,default=4)
     parser.add_argument('--regularization',type=str,default='l1')
     parser.add_argument('--attack_succ_threshold',type=float,default=0.99)
     parser.add_argument('--early_stop',type=bool,default=False)
@@ -57,20 +58,33 @@ def main():
     parser.add_argument('--log',type=bool,default=True)
     parser.add_argument('--result_filepath',type=str,default = './results.txt')
     parser.add_argument('--scratch_dirpath',type=str,default = '/scratch_dirpath/')
-    parser.add_argument('--examples_dirpath',type=str,default='/data/share/trojai/trojai-round3-dataset/id-00000189/clean_example_data/')
-    parser.add_argument('--model_filepath',type=str,default='/data/share/trojai/trojai-round3-dataset/id-00000189/model.pt')
+    parser.add_argument('--examples_dirpath',type=str,default='../data_K-ARM/train')
+    parser.add_argument('--model_filepath',type=str,default='../models/resnet50_1.pth')
     args = parser.parse_args()
 
 
     print_args(args)
+
+    use_cuda = torch.cuda.is_available()
+    args.device = torch.device('cuda' if use_cuda else 'cpu')
+    if(use_cuda): print("============================================ CUDA ACTIVE ===========================================\n")
+
     start_time = time.time()
-    model,num_classes = loading_models(args)
-    args.num_classes = num_classes
+    model = loading_models(args)
 
     print('='*41 + ' Arm Pre-Screening ' + '='*40)
 
+    transform = transforms.Compose([
+        transforms.Resize((64, 64)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
 
-    raw_target_classes, raw_victim_classes =  Pre_Screening(args,model)
+
+    raw_target_classes, raw_victim_classes =  Pre_Screening(args, model, transform)
+    if not raw_target_classes: 
+        print("==================================== NO RAW TARGET CLASS FOUND! ====================================")
+        return 
     target_classes,victim_classes,num_classes,trigger_type = identify_trigger_type(raw_target_classes,raw_victim_classes)
     args.num_classes = num_classes
 
@@ -83,7 +97,7 @@ def main():
     else:
 
         print('='*40 + ' K-ARM Optimization ' + '='*40)
-        l1_norm,mask,target_class,victim_class,opt_times = K_Arm_Opt(args,target_classes,victim_classes,trigger_type,model,'forward')
+        l1_norm,mask,target_class,victim_class,opt_times = K_Arm_Opt(args,target_classes,victim_classes,trigger_type,model,'forward', transform)
         print(f'Target Class: {target_class} Victim Class: {victim_class} Trigger Size: {l1_norm} Optimization Steps: {opt_times}')
         if args.sym_check and trigger_type == 'polygon_specific':
             args.step = opt_times
@@ -93,7 +107,7 @@ def main():
             sym_victim_class = torch.IntTensor([tmp])
 
             print('='*40 + ' Symmetric Check ' + '='*40)
-            sym_l1_norm,_,_,_,_ = K_Arm_Opt(args,sym_target_class,sym_victim_class,trigger_type,model,'backward')
+            sym_l1_norm,_,_,_,_ = K_Arm_Opt(args,sym_target_class,sym_victim_class,trigger_type,model,'backward', transform)
         else:
             sym_l1_norm = None 
         

@@ -31,7 +31,7 @@ class CustomDataSet(Dataset):
 
     def __getitem__(self, idx):
         img_loc = os.path.join(self.main_dir, self.total_imgs[idx])
-        label = int(img_loc.split('_')[-3])
+        label = int(img_loc.split(".jpeg")[0][-1])
         image = Image.open(img_loc).convert("RGB")
         tensor_image = self.transform(image)
         return tensor_image,self.total_imgs[idx],label
