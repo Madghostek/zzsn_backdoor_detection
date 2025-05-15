@@ -82,6 +82,8 @@ def main():
 
 
     raw_target_classes, raw_victim_classes =  Pre_Screening(args, model, transform)
+    raw_target_classes = [0, 1, 2, 3]
+    raw_victim_classes = None
     if not raw_target_classes: 
         print("==================================== NO RAW TARGET CLASS FOUND! ====================================")
         return 
