@@ -1,2 +1,2 @@
-kaggle competitions download -c backdoored-class-detection-challenge
-unzip backdoored-class-detection-challenge.zip -d data/raw
+kaggle competitions download -c backdoored-class-detection-challenge-vol-2
+unzip backdoored-class-detection-challenge-vol-2.zip -d data/raw

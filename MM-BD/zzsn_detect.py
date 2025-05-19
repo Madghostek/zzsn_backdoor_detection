@@ -26,6 +26,7 @@ from pathlib import Path
 from src.resnet import ResNet18
 from scipy.stats import median_abs_deviation as MAD
 from scipy.stats import gamma
+from torchsummary import summary
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -56,14 +57,14 @@ def lr_scheduler(iter_idx):
     lr = 1e-2
     return lr
 
-for checkpoint in Path("models").glob("*.pth"):
+for checkpoint in Path("models_controlled").glob("*.pth"):
     model.load_state_dict(torch.load(checkpoint))
     model.eval()
 
     res = []
     for t in range(NC):
 
-        images = torch.rand([30, 3, 64, 64]).to(device)
+        images = torch.rand([30, 3, 32, 32]).to(device)
         images.requires_grad = True
 
         last_loss = 1000
@@ -93,7 +94,7 @@ for checkpoint in Path("models").glob("*.pth"):
     score = abs_deviation / mad
     print(score)
 
-    np.save('results.npy', np.array(res))
+    #np.save('results.npy', np.array(res))
     ind_max = np.argmax(stats)
     r_eval = np.amax(stats)
     r_null = np.delete(stats, ind_max)
@@ -101,7 +102,7 @@ for checkpoint in Path("models").glob("*.pth"):
     shape, loc, scale = gamma.fit(r_null)
     pv = 1 - pow(gamma.cdf(r_eval, a=shape, loc=loc, scale=scale), len(r_null)+1)
     print(pv)
-    print(checkpoint)
+    print(checkpoint.name)
     if pv > 0.05:
         print('No Attack!')
     else:
