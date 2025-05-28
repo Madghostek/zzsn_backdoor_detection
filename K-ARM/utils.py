@@ -71,7 +71,7 @@ def identify_trigger_type(raw_target_classes,raw_victim_classes):
     else:
         #print(raw_target_classes)
         if raw_target_classes != None:
-            num_classes = 1 
+            num_classes = len(raw_target_classes)
             target_classes = raw_target_classes
             victim_classes = raw_victim_classes
             trigger_type = 'polygon_global'

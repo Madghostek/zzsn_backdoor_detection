@@ -18,7 +18,7 @@ from K_Arm_Scanner import *
 
 
 
-def K_Arm_Opt(args,target_classes_all,triggered_classes_all,trigger_type,model,direction, transform):
+def K_Arm_Opt(args,target_classes_all,triggered_classes_all, target_class, trigger_type,model,direction, transform):
 
     device = args.device
 
@@ -68,14 +68,12 @@ def K_Arm_Opt(args,target_classes_all,triggered_classes_all,trigger_type,model,d
 
     
     mask = torch.clamp(mask,min=0,max=1)
-
-    if args.num_classes == 1:
-        start_label_index = 0
-    else:
-        #start_label_index = torch.randint(0,args.num_classes-1,(1,))[0].item()
-        start_label_index = 0
-
-    pattern, mask, l1_norm, total_times = k_arm_scanner.scanning(target_classes_all,data_loader_arr,start_label_index,pattern,mask,trigger_type,direction)
+    start_label_index = 0
+    # if args.num_classes == 1:
+    #     start_label_index = 0
+    # else:
+    #     start_label_index = torch.randint(0,args.num_classes-1,(1,))[0].item()
+    pattern, mask, l1_norm, total_times = k_arm_scanner.scanning(target_classes_all,data_loader_arr,target_class,pattern,mask,trigger_type,direction)
     index = torch.argmin(torch.Tensor(l1_norm))
 
 

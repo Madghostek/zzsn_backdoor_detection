@@ -30,8 +30,8 @@ def main():
     parser.add_argument('--channels',type=int,default=3)
     parser.add_argument('--batch_size',type=int,default=32)
     parser.add_argument('--lr',type=float,default=1e-01)
-    parser.add_argument('--step',type=int,default =1000)
-    parser.add_argument('--rounds',type=int,default =60)
+    parser.add_argument('--step',type=int,default = 1000)
+    parser.add_argument('--rounds',type=int,default = 60)
     parser.add_argument('--warmup_rounds',type=int,default=2)
     parser.add_argument('--init_cost',type=float,default=1e-03)
     parser.add_argument('--patience',type=int,default=5)
@@ -59,7 +59,7 @@ def main():
     parser.add_argument('--result_filepath',type=str,default = './results.txt')
     parser.add_argument('--scratch_dirpath',type=str,default = '/scratch_dirpath/')
     parser.add_argument('--examples_dirpath',type=str,default='../data_K-ARM/train')
-    parser.add_argument('--model_filepath',type=str,default='../models/resnet50_1.pth')
+    parser.add_argument('--model_filepath',type=str,default='../models/resnet50_2.pth')
     args = parser.parse_args()
 
 
@@ -77,7 +77,7 @@ def main():
     transform = transforms.Compose([
         transforms.Resize((64, 64)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
 
@@ -89,6 +89,7 @@ def main():
         return 
     target_classes,victim_classes,num_classes,trigger_type = identify_trigger_type(raw_target_classes,raw_victim_classes)
     args.num_classes = num_classes
+    print(f"Num classes: {num_classes}")
 
     if trigger_type == 'benign':
         print('Model is Benign')
@@ -99,41 +100,55 @@ def main():
     else:
 
         print('='*40 + ' K-ARM Optimization ' + '='*40)
-        l1_norm,mask,target_class,victim_class,opt_times = K_Arm_Opt(args,target_classes,victim_classes,trigger_type,model,'forward', transform)
-        print(f'Target Class: {target_class} Victim Class: {victim_class} Trigger Size: {l1_norm} Optimization Steps: {opt_times}')
-        if args.sym_check and trigger_type == 'polygon_specific':
-            args.step = opt_times
-            args.num_classes = 1
-            tmp = target_class
-            sym_target_class = [victim_class.item()]
-            sym_victim_class = torch.IntTensor([tmp])
+        trojans_file = []
+        target_classes_file = []
+        victim_classes_file = []
+        l1_norms = []
+        time_costs = []
+        for target in target_classes:
+            print(f"Target: {target}")
+            l1_norm,mask,target_class,victim_class,opt_times = K_Arm_Opt(args,target_classes,victim_classes,target,trigger_type,model,'forward', transform)
+            print(f'Target Class: {target_class} Victim Class: {victim_class} Trigger Size: {l1_norm} Optimization Steps: {opt_times}')
+            if args.sym_check and trigger_type == 'polygon_specific':
+                args.step = opt_times
+                args.num_classes = 1
+                tmp = target_class
+                sym_target_class = [victim_class.item()]
+                sym_victim_class = torch.IntTensor([tmp])
 
-            print('='*40 + ' Symmetric Check ' + '='*40)
-            sym_l1_norm,_,_,_,_ = K_Arm_Opt(args,sym_target_class,sym_victim_class,trigger_type,model,'backward', transform)
-        else:
-            sym_l1_norm = None 
+                print('='*40 + ' Symmetric Check ' + '='*40)
+                sym_l1_norm,_,_,_,_ = K_Arm_Opt(args,sym_target_class,sym_victim_class,trigger_type,model,'backward', transform)
+            else:
+                sym_l1_norm = None 
         
-        trojan = trojan_det(args,trigger_type,l1_norm,sym_l1_norm)
+            trojan = trojan_det(args,trigger_type,l1_norm,sym_l1_norm)
+            trojans_file.append(trojan)
+            l1_norms.append(l1_norm)
+            victim_classes_file.append(victim_class)
+            target_classes_file.append(target_class)
     
 
-    end_time = time.time()
-    time_cost = end_time - start_time
+            end_time = time.time()
+            time_cost = end_time - start_time
+            time_costs.append(time_cost)
 
 
 
 
     if args.log:
         with open(args.result_filepath, 'a') as f:
-            if l1_norm is None:
-                f.write(f'Model: {args.model_filepath} Trojan: {trojan} Time Cost: {time_cost} Description: No candidate pairs after pre-screening\n')
+            for i in range(len(trojans_file)):
 
-            else:
+                if l1_norm is None:
+                    f.write(f'Model: {args.model_filepath} Trojan: {trojans_file[i]} Time Cost: {time_costs[i]} Description: No candidate pairs after pre-screening\n')
 
-                if sym_l1_norm is None:
-                    f.write(f'Model: {args.model_filepath} Trojan: {trojan} Trigger Type: {trigger_type} Victim Class: {victim_class} Target Class: {target_class} Trigger Size: {l1_norm} Time Cost: {time_cost} Description: Trigger size is smaller (larger) than corresponding bounds\n')
-                
                 else:
-                    f.write(f'Model: {args.model_filepath} Trojan: {trojan} Trigger Type: {trigger_type} Victim Class: {victim_class} Target Class: {target_class} Trigger Size: {l1_norm} Ratio: {sym_l1_norm/l1_norm} Time Cost: {time_cost} Description: Trigger size is smaller (larger) than ratio bound \n')
+
+                    if sym_l1_norm is None:
+                        f.write(f'Model: {args.model_filepath} Trojan: {trojans_file[i]} Trigger Type: {trigger_type} Victim Class: {victim_classes_file[i]} Target Class: {target_classes_file[i]} Trigger Size: {l1_norms[i]} Time Cost: {time_costs[i]} Description: Trigger size is smaller (larger) than corresponding bounds\n')
+                
+                    else:
+                        f.write(f'Model: {args.model_filepath} Trojan: {trojans_file[i]} Trigger Type: {trigger_type} Victim Class: {victim_classes_file[i]} Target Class: {target_classes_file[i]} Trigger Size: {l1_norms[i]} Ratio: {sym_l1_norm/l1_norms[i]} Time Cost: {time_costs[i]} Description: Trigger size is smaller (larger) than ratio bound \n')
                 
 
                     

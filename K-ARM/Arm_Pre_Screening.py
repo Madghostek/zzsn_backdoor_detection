@@ -47,6 +47,7 @@ def Pre_Screening(args,model, transform):
 
     # step 1: check all label trigger
     target_label = all_label_trigger_det(args,topk_index)
+    print(target_label)
 
 
 
