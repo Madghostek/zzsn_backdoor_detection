@@ -129,6 +129,7 @@ class K_Arm_Scanner:
         times = [0] * self.num_classes
         total_times = [0] * self.num_classes
         first_best_reg = [1e+10] * self.num_classes
+        print(f"Target index: {y_target_index}")
         y_target_tensor = torch.Tensor([target_classes_all[y_target_index]]).long().to(self.device)
         
         optimizer_list = []
@@ -155,7 +156,7 @@ class K_Arm_Scanner:
             loss_reg_list = []
             loss_list = []
             loss_acc_list = []
-            for idx, (img,name,label) in enumerate(data_loader_arr[y_target_index]):
+            for idx, (img,name,label) in enumerate(data_loader_arr[0]):
                 img = img.to(self.device)
                 Y_target = y_target_tensor.repeat(img.size()[0])
 

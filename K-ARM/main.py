@@ -30,7 +30,7 @@ def main():
     parser.add_argument('--channels',type=int,default=3)
     parser.add_argument('--batch_size',type=int,default=32)
     parser.add_argument('--lr',type=float,default=1e-01)
-    parser.add_argument('--step',type=int,default = 1000)
+    parser.add_argument('--step',type=int,default = 100)
     parser.add_argument('--rounds',type=int,default = 60)
     parser.add_argument('--warmup_rounds',type=int,default=2)
     parser.add_argument('--init_cost',type=float,default=1e-03)
@@ -52,14 +52,14 @@ def main():
     parser.add_argument('--local_theta',type=float,default=0.9,help='theta for label-specific trigger pre-screening') 
     parser.add_argument('--central_init',type=bool,default=True,help='strategy for initalization') 
     parser.add_argument('--sym_check',type=bool,default=True,help='If using sym check') 
-    parser.add_argument('--global_det_bound',type=int,default=1720,help='global bound to decide whether the model is trojan or not') 
-    parser.add_argument('--local_det_bound',type=int,default=1000,help='local bound to decide whether the model is trojan or not') 
+    parser.add_argument('--global_det_bound',type=int,default=10000,help='global bound to decide whether the model is trojan or not') 
+    parser.add_argument('--local_det_bound',type=int,default=10000,help='local bound to decide whether the model is trojan or not') 
     parser.add_argument('--ratio_det_bound',type=int,default=10,help='ratio bound to decide whether the model is trojan or not') 
     parser.add_argument('--log',type=bool,default=True)
     parser.add_argument('--result_filepath',type=str,default = './results.txt')
     parser.add_argument('--scratch_dirpath',type=str,default = '/scratch_dirpath/')
     parser.add_argument('--examples_dirpath',type=str,default='../data_K-ARM/train')
-    parser.add_argument('--model_filepath',type=str,default='../models/resnet50_2.pth')
+    parser.add_argument('--model_filepath',type=str,default='../models/resnet50_5.pth')
     args = parser.parse_args()
 
 
@@ -105,6 +105,7 @@ def main():
         victim_classes_file = []
         l1_norms = []
         time_costs = []
+        print(f"All targets: {target_classes}")
         for target in target_classes:
             print(f"Target: {target}")
             l1_norm,mask,target_class,victim_class,opt_times = K_Arm_Opt(args,target_classes,victim_classes,target,trigger_type,model,'forward', transform)
