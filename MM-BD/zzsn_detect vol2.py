@@ -7,6 +7,8 @@ import sys
 
 sys.path.append(".")
 sys.path.append("./BadMerging")
+sys.path.append("./BadMerging/src")
+
 
 from BadMerging.src.heads import build_classification_head, get_templates
 from BadMerging.src.modeling import ClassificationHead, ImageClassifier, ImageEncoder
@@ -34,21 +36,21 @@ image_size = [30, 3, 224, 224]
 
 # Load model
 
-print("Loading model")
-encoder,train_preprocess,val_preprocess = open_clip.create_model_and_transforms('ViT-B-32', pretrained=None)
-setattr(encoder,'val_preprocess',val_preprocess) # trzeba żeby się nie wysypało...
-setattr(encoder,'train_preprocess',train_preprocess)
-num_classes = 100
-embed_dim = encoder.text_projection.shape[-1] if hasattr(encoder, 'text_projection') else encoder.embed_dim
-dummy_weights = torch.empty(num_classes, embed_dim)
+# print("Loading model")
+# encoder,train_preprocess,val_preprocess = open_clip.create_model_and_transforms('ViT-B-32', pretrained=None)
+# setattr(encoder,'val_preprocess',val_preprocess) # trzeba żeby się nie wysypało...
+# setattr(encoder,'train_preprocess',train_preprocess)
+# num_classes = 100
+# embed_dim = encoder.text_projection.shape[-1] if hasattr(encoder, 'text_projection') else encoder.embed_dim
+# dummy_weights = torch.empty(num_classes, embed_dim)
 
-head = ClassificationHead(
-    normalize=True,
-    weights=dummy_weights
-)
-model = ImageClassifier(encoder,head)
+# head = ClassificationHead(
+#     normalize=True,
+#     weights=dummy_weights
+# )
+# model = ImageClassifier(encoder,head)
 
-criterion = nn.CrossEntropyLoss()
+# criterion = nn.CrossEntropyLoss()
 
 #if device == 'cuda':
 #    model = torch.nn.DataParallel(model)
