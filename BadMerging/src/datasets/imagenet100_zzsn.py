@@ -18,11 +18,12 @@ class ImageFolderDataset(datasets.ImageFolder):
 class ImageNet100_ZZSN:
     def __init__(self,
                  preprocess,
-                 location=os.path.expanduser('./data'),
+                 location=None,
                  batch_size=32,
                  num_workers=16):
         # Data loading code
-        location = './data'
+        if not location:
+            location = './data'
         traindir = os.path.join(location, 'ImageNet100_ZZSN', 'train')
         #valdir = os.path.join(location, 'ImageNet100_ZZSN', 'val')
 
