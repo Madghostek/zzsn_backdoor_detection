@@ -7,7 +7,7 @@
 
 
 import torch 
-from dataset import CustomDataSet
+from dataset import CustomDataSet, ImageFolderDataset
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import numpy as np
@@ -17,7 +17,7 @@ import numpy as np
 def Pre_Screening(args,model, transform):
     device = args.device
 
-    dataset = CustomDataSet(args.examples_dirpath,transform=transform,triggered_classes =[])
+    dataset = ImageFolderDataset(args.examples_dirpath,transform=transform)
     data_loader = DataLoader(dataset=dataset,batch_size = args.batch_size,shuffle=True,drop_last=False,num_workers=2,pin_memory=True)
     acc = 0
     for idx, (img,name,label) in enumerate(data_loader):
@@ -90,17 +90,17 @@ def Pre_Screening(args,model, transform):
 
 def all_label_trigger_det(args,topk_index):
 
-    target_label = -1
+    target_label = []
     count_all = torch.zeros(args.num_classes)
     for i in range(args.num_classes):
         count_all[i] = topk_index[topk_index == i].size(0)
-    max_count = torch.max(count_all)
-    max_index = torch.argmax(count_all)
-    if max_count > args.global_theta * topk_index.size(0):
-
-        target_label = max_index
+    max_counts = torch.topk(count_all, args.possible_targets_number)
+    max_indexes = max_counts.indices
+    max_counts = max_counts.values
+    for i in range(len(max_counts)):
+        if max_counts[i] > args.global_theta * topk_index.size(0):
+            target_label.append(max_indexes[i].item())
     return target_label
-
 
 
 

@@ -37,7 +37,7 @@ def main():
     parser.add_argument('--patience',type=int,default=5)
     parser.add_argument('--cost_multiplier',type=float,default=1.5)
     parser.add_argument('--epsilon',type=float,default=1e-07)
-    parser.add_argument('--num_classes',type=int,default=4)
+    parser.add_argument('--num_classes',type=int,default=100)
     parser.add_argument('--regularization',type=str,default='l1')
     parser.add_argument('--attack_succ_threshold',type=float,default=0.99)
     parser.add_argument('--early_stop',type=bool,default=False)
@@ -58,8 +58,10 @@ def main():
     parser.add_argument('--log',type=bool,default=True)
     parser.add_argument('--result_filepath',type=str,default = './results.txt')
     parser.add_argument('--scratch_dirpath',type=str,default = '/scratch_dirpath/')
-    parser.add_argument('--examples_dirpath',type=str,default='../data_K-ARM/train')
-    parser.add_argument('--model_filepath',type=str,default='../models/resnet50_5.pth')
+    parser.add_argument('--examples_dirpath',type=str,default='../data/train/train')
+    parser.add_argument('--model_name', type=str,default='CLIP')
+    parser.add_argument('--model_filepath_1',type=str,default='../models/CLIP/finetuned_s1_fs1.pt')
+    parser.add_argument('--possible_targets_number',type=int,default='10')
     args = parser.parse_args()
 
 
@@ -70,20 +72,14 @@ def main():
     if(use_cuda): print("============================================ CUDA ACTIVE ===========================================\n")
 
     start_time = time.time()
-    model = loading_models(args)
+    model, transform = loading_models(args)
 
     print('='*41 + ' Arm Pre-Screening ' + '='*40)
 
-    transform = transforms.Compose([
-        transforms.Resize((64, 64)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
-
 
     raw_target_classes, raw_victim_classes =  Pre_Screening(args, model, transform)
-    raw_target_classes = [0, 1, 2, 3]
-    raw_victim_classes = None
+    # raw_target_classes = [0, 1, 2, 3]
+    # raw_victim_classes = None
     if not raw_target_classes: 
         print("==================================== NO RAW TARGET CLASS FOUND! ====================================")
         return 
@@ -106,9 +102,9 @@ def main():
         l1_norms = []
         time_costs = []
         print(f"All targets: {target_classes}")
-        for target in target_classes:
-            print(f"Target: {target}")
-            l1_norm,mask,target_class,victim_class,opt_times = K_Arm_Opt(args,target_classes,victim_classes,target,trigger_type,model,'forward', transform)
+        for target_index in range(len(target_classes)):
+            print(f"Target: {target_classes[target_index]}")
+            l1_norm,mask,target_class,victim_class,opt_times = K_Arm_Opt(args,target_classes,victim_classes,target_index,trigger_type,model,'forward', transform)
             print(f'Target Class: {target_class} Victim Class: {victim_class} Trigger Size: {l1_norm} Optimization Steps: {opt_times}')
             if args.sym_check and trigger_type == 'polygon_specific':
                 args.step = opt_times
@@ -133,8 +129,10 @@ def main():
             time_cost = end_time - start_time
             time_costs.append(time_cost)
 
-
-
+    trojan_classes = []
+    for i in range(len(trojans_file)):  
+        if trojans_file[i] == "trojan":
+            trojan_classes.append(i)
 
     if args.log:
         with open(args.result_filepath, 'a') as f:
@@ -150,7 +148,10 @@ def main():
                 
                     else:
                         f.write(f'Model: {args.model_filepath} Trojan: {trojans_file[i]} Trigger Type: {trigger_type} Victim Class: {victim_classes_file[i]} Target Class: {target_classes_file[i]} Trigger Size: {l1_norms[i]} Ratio: {sym_l1_norm/l1_norms[i]} Time Cost: {time_costs[i]} Description: Trigger size is smaller (larger) than ratio bound \n')
-                
+        
+            f.write(f'Trojans: {trojan_classes}')
+            
+
 
                     
 
