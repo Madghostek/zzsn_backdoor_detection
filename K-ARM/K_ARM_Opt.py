@@ -8,7 +8,7 @@
 
 
 import torch 
-from dataset import CustomDataSet
+from dataset import CustomDataSet, ImageFolderDataset
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import numpy as np
@@ -25,13 +25,13 @@ def K_Arm_Opt(args,target_classes_all,triggered_classes_all, target_class, trigg
     data_loader_arr = []
     if triggered_classes_all is None:
 
-        data_set = CustomDataSet(args.examples_dirpath,transform=transform,triggered_classes=triggered_classes_all)
+        data_set = ImageFolderDataset(args.examples_dirpath,transform=transform)
         data_loader = DataLoader(dataset=data_set,batch_size = args.batch_size,shuffle=False,drop_last=False,num_workers=8,pin_memory=True)
         data_loader_arr.append(data_loader)
     
     else:
         for i in range(len(target_classes_all)):
-            data_set = CustomDataSet(args.examples_dirpath,transform=transform,triggered_classes=triggered_classes_all[i],label_specific=True)
+            data_set = ImageFolderDataset(args.examples_dirpath,transform=transform)
             data_loader = DataLoader(dataset=data_set,batch_size = args.batch_size,shuffle=False,drop_last=False,num_workers=8,pin_memory=True)
             data_loader_arr.append(data_loader)
 

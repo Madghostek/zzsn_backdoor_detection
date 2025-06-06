@@ -3,7 +3,7 @@ import os
 from PIL import Image
 from torch.utils.data import Dataset
 from natsort import natsorted
-
+from torchvision import models, datasets
 
 #define custom dataset for TrojAI competition
 
@@ -35,3 +35,16 @@ class CustomDataSet(Dataset):
         image = Image.open(img_loc).convert("RGB")
         tensor_image = self.transform(image)
         return tensor_image,self.total_imgs[idx],label
+
+class ImageFolderDataset(datasets.ImageFolder):
+    def __init__(self, root, transform):
+        super().__init__(root, transform)
+
+    def __getitem__(self, index: int):
+        path, target = self.samples[index]
+        sample = self.loader(path)
+        if self.transform is not None:
+            sample = self.transform(sample)
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+        return sample, index, target
