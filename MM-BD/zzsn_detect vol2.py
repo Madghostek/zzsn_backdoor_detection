@@ -9,6 +9,8 @@ sys.path.append(".")
 sys.path.append("./BadMerging")
 sys.path.append("./BadMerging/src")
 
+DATASET = "/home/tomek/datasets/zzsn_vol2"
+
 
 from BadMerging.src.heads import build_classification_head, get_templates
 from BadMerging.src.modeling import ClassificationHead, ImageClassifier, ImageEncoder
@@ -21,14 +23,15 @@ import torch.nn.functional as F
 import open_clip
 from tqdm import tqdm
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(device)
 
 random.seed()
 
 # Detection parameters
-NC = 512 # classes
+NC = 100 # classes
 NI = 150
 PI = 0.9
-NSTEP = 30
+NSTEP = 1 #300
 TC = 6
 batch_size = 20
 
@@ -37,7 +40,7 @@ image_size = [30, 3, 224, 224]
 # Load model
 
 # print("Loading model")
-# encoder,train_preprocess,val_preprocess = open_clip.create_model_and_transforms('ViT-B-32', pretrained=None)
+encoder,train_preprocess,val_preprocess = open_clip.create_model_and_transforms('ViT-B-32', pretrained=None)
 # setattr(encoder,'val_preprocess',val_preprocess) # trzeba żeby się nie wysypało...
 # setattr(encoder,'train_preprocess',train_preprocess)
 # num_classes = 100
@@ -64,6 +67,10 @@ print(Path("models").absolute())
 for checkpoint in Path("models_vol2").glob("*.pt"):
     print("working on",checkpoint)
     model = torch.load(checkpoint,weights_only=False).to(device)
+    temp_model,_,_ = open_clip.create_model_and_transforms("ViT-B-32", pretrained=None)
+    model.model.transformer = temp_model.transformer.to(device)
+    template = get_templates("ImageNet100_ZZSN")
+    classification_head = build_classification_head(model.model, "ImageNet100_ZZSN", template, DATASET, device)
     model.eval()
 
     res = []
@@ -80,7 +87,10 @@ for checkpoint in Path("models_vol2").glob("*.pt"):
 
             optimizer = torch.optim.SGD([images], lr=lr_scheduler(iter_idx), momentum=0.2)
             optimizer.zero_grad()
-            outputs = model(torch.clamp(images, min=0, max=1))
+            outputs = model(torch.clamp(images, min=0, max=1)).to(device)
+            # print("embedding:",outputs)
+            outputs = classification_head(outputs.to(device))
+            # print("Outputs:",outputs)
 
             loss = -1 * torch.sum((outputs * onehot_label)) \
                 + torch.sum(torch.max((1-onehot_label) * outputs - 1000 * onehot_label, dim=1)[0])

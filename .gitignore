@@ -3,3 +3,4 @@ data_K-ARM/
 models/
 K-ARM/results.txt
 Neural_Cleanse/results/
+.venv
