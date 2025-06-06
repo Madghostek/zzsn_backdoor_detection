@@ -315,7 +315,7 @@ class Visualizer:
             
             for idx in range(self.mini_batch):
             #for X_batch, _ in gen:
-                X_batch, _ = next(iter(gen))
+                X_batch, _, _ = next(iter(gen))
                 # IMPORTANT: MASK OPERATION IN RAW DOMAIN
                 if self.raw_input_flag:
                     input_raw_tensor = X_batch

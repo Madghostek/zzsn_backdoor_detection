@@ -22,8 +22,10 @@ from PIL import Image
 from torch.utils.data import Dataset
 import glob
 import shutil
+from torchvision import datasets
+import open_clip
 
-
+from mm_bad_dataset import ImageFolderDataset, ImageNet100
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 ##############################
@@ -35,19 +37,19 @@ print(f"Torch version: {torch.__version__}")
 print(f"Torch is CUDA available?: {torch.cuda.is_available()}")
 
 DEVICE = torch.device('cuda' if use_cuda else 'cpu')
-DATA_DIR = '../data/raw/train'
-MODEL_FILENAME = '../models/resnet50_1.pth'  # model file
+DATA_DIR = '../data/ImageNet100_ZZSN/train'
+MODEL_FILENAMES = ['../models/CLIP/finetuned_s1_fs1.pt', '../models/CLIP/head_ImageNet100.pt']  # model file
 RESULT_DIR = 'results'  # directory for storing results
 # image filename template for visualization results
 IMG_FILENAME_TEMPLATE = 'gtsrb_visualize_%s_label_%d.png'
 
 # input size
-IMG_ROWS = 64
-IMG_COLS = 64
+IMG_ROWS = 224
+IMG_COLS = 224
 IMG_COLOR = 3
 
 INPUT_SHAPE = (IMG_COLOR, IMG_ROWS, IMG_COLS)
-NUM_CLASSES = 4  # total number of classes in the model
+NUM_CLASSES = 100  # total number of classes in the model
 Y_TARGET = 28  # (optional) infected target label, used for prioritizing label scanning
 
 INTENSITY_RANGE = 'raw'  # preprocessing method for the task, GTSRB uses raw pixel intensities
@@ -126,17 +128,11 @@ def make_class_directories(images_dir):
 
 
 def get_dataloader(test_root):
-    transform_test = transforms.Compose([
-        transforms.Resize([64,64]),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
+    encoder, train_preprocess, val_preprocess = open_clip.create_model_and_transforms("ViT-B-32", pretrained=None)
+    image_net = ImageNet100(train_preprocess)
     print("IN get_loader")
-    testset = ImageFolder(root=test_root, transform=transform_test)
-    test_loader = torch.utils.data.DataLoader(testset, batch_size = BATCH_SIZE, shuffle=False)
 
-    print(testset.classes)
-    return test_loader
+    return image_net
 
 #
 # def build_data_loader(X, Y):
@@ -227,11 +223,11 @@ def save_pattern(pattern, mask, y_target):
 def gtsrb_visualize_label_scan_bottom_right_white_4():
 
     print('loading dataset')
-    test_loader = get_dataloader(DATA_DIR)
+    test_loader = get_dataloader(DATA_DIR).train_loader
 
 
     print('loading model')
-    model = utils_backdoor.load_model(MODEL_FILENAME, DEVICE, NUM_CLASSES)
+    model = utils_backdoor.load_model(MODEL_FILENAMES, DEVICE, NUM_CLASSES)
 
     # initialize visualizer
     visualizer = Visualizer(
@@ -269,7 +265,7 @@ def gtsrb_visualize_label_scan_bottom_right_white_4():
 def main():
 
     #utils_backdoor.fix_gpu_memory()
-    make_class_directories(DATA_DIR)
+    # make_class_directories(DATA_DIR)
     gtsrb_visualize_label_scan_bottom_right_white_4()
 
 

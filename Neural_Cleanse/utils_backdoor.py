@@ -16,6 +16,7 @@ from torchvision import models
 from torch import nn
 # from networks.resnet import ResNet18
 # from torchvision.models import resnet18
+import open_clip
 
 def dump_image(x, filename, format):
     #img = image.array_to_img(x, scale=False)
@@ -38,14 +39,21 @@ def load_dataset(data_filename, keys=None):
 
     return dataset
 
-def load_model(model_file, device, num_classes):
-    
-    print("In load model")
-    net = models.resnet50(weights = models.ResNet50_Weights.IMAGENET1K_V1)
-    net.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1, bias=False)
-    net.fc = nn.Linear(net.fc.in_features, num_classes)
-    net = net.to(device)
-    model = torch.load(model_file, map_location=device) #original
-    net.load_state_dict(model)
-    print("model done")
-    return net
+def load_model(model_files, device, num_classes):
+
+    sys.path.append('../')
+    sys.path.append('../BadMerging/')
+    sys.path.append('../BadMerging/src')
+
+    from BadMerging.src.heads import build_classification_head, get_templates, get_classification_head
+    from BadMerging.src.modeling import ClassificationHead, ImageClassifier, ImageEncoder
+
+
+    model = torch.load(model_files[0],weights_only=False).to(device)
+    encoder, train_preprocess, val_preprocess = open_clip.create_model_and_transforms("ViT-B-32", pretrained=None)
+    model.model.transformer = encoder.transformer.to(device)
+
+    classification_head = torch.load(model_files[1], weights_only=False).to(device)
+    image_encoder = model
+    model = ImageClassifier(image_encoder, classification_head)
+    return model

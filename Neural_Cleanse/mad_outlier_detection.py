@@ -21,8 +21,8 @@ RESULT_DIR = 'results'  # directory for storing results
 IMG_FILENAME_TEMPLATE = 'gtsrb_visualize_%s_label_%d.png'  # image filename template for visualization results
 
 # input size
-IMG_ROWS = 64
-IMG_COLS = 64
+IMG_ROWS = 224
+IMG_COLS = 224
 IMG_COLOR = 3
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
