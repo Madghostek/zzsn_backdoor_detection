@@ -30,14 +30,14 @@ def main():
     parser.add_argument('--channels',type=int,default=3)
     parser.add_argument('--batch_size',type=int,default=32)
     parser.add_argument('--lr',type=float,default=1e-01)
-    parser.add_argument('--step',type=int,default = 100)
+    parser.add_argument('--step',type=int,default = 400)
     parser.add_argument('--rounds',type=int,default = 60)
     parser.add_argument('--warmup_rounds',type=int,default=2)
     parser.add_argument('--init_cost',type=float,default=1e-03)
     parser.add_argument('--patience',type=int,default=5)
     parser.add_argument('--cost_multiplier',type=float,default=1.5)
     parser.add_argument('--epsilon',type=float,default=1e-07)
-    parser.add_argument('--num_classes',type=int,default=100)
+    parser.add_argument('--num_classes',type=int,default=4)
     parser.add_argument('--regularization',type=str,default='l1')
     parser.add_argument('--attack_succ_threshold',type=float,default=0.99)
     parser.add_argument('--early_stop',type=bool,default=False)
@@ -58,10 +58,10 @@ def main():
     parser.add_argument('--log',type=bool,default=True)
     parser.add_argument('--result_filepath',type=str,default = './results.txt')
     parser.add_argument('--scratch_dirpath',type=str,default = '/scratch_dirpath/')
-    parser.add_argument('--examples_dirpath',type=str,default='../data/train/train')
-    parser.add_argument('--model_name', type=str,default='CLIP')
-    parser.add_argument('--model_filepath_1',type=str,default='../models/CLIP/finetuned_s1_fs1.pt')
-    parser.add_argument('--possible_targets_number',type=int,default='10')
+    parser.add_argument('--examples_dirpath',type=str,default='../data_K-ARM/train/')
+    parser.add_argument('--model_name', type=str,default='ResNet')
+    parser.add_argument('--model_filepath_1',type=str,default='../models/ResNet/resnet50_4.pth')
+    parser.add_argument('--possible_targets_number',type=int,default='2')
     args = parser.parse_args()
 
 
@@ -139,15 +139,15 @@ def main():
             for i in range(len(trojans_file)):
 
                 if l1_norm is None:
-                    f.write(f'Model: {args.model_filepath} Trojan: {trojans_file[i]} Time Cost: {time_costs[i]} Description: No candidate pairs after pre-screening\n')
+                    f.write(f'Model: {args.model_filepath_1} Trojan: {trojans_file[i]} Time Cost: {time_costs[i]} Description: No candidate pairs after pre-screening\n')
 
                 else:
 
                     if sym_l1_norm is None:
-                        f.write(f'Model: {args.model_filepath} Trojan: {trojans_file[i]} Trigger Type: {trigger_type} Victim Class: {victim_classes_file[i]} Target Class: {target_classes_file[i]} Trigger Size: {l1_norms[i]} Time Cost: {time_costs[i]} Description: Trigger size is smaller (larger) than corresponding bounds\n')
+                        f.write(f'Model: {args.model_filepath_1} Trojan: {trojans_file[i]} Trigger Type: {trigger_type} Victim Class: {victim_classes_file[i]} Target Class: {target_classes_file[i]} Trigger Size: {l1_norms[i]} Time Cost: {time_costs[i]} Description: Trigger size is smaller (larger) than corresponding bounds\n')
                 
                     else:
-                        f.write(f'Model: {args.model_filepath} Trojan: {trojans_file[i]} Trigger Type: {trigger_type} Victim Class: {victim_classes_file[i]} Target Class: {target_classes_file[i]} Trigger Size: {l1_norms[i]} Ratio: {sym_l1_norm/l1_norms[i]} Time Cost: {time_costs[i]} Description: Trigger size is smaller (larger) than ratio bound \n')
+                        f.write(f'Model: {args.model_filepath_1} Trojan: {trojans_file[i]} Trigger Type: {trigger_type} Victim Class: {victim_classes_file[i]} Target Class: {target_classes_file[i]} Trigger Size: {l1_norms[i]} Ratio: {sym_l1_norm/l1_norms[i]} Time Cost: {time_costs[i]} Description: Trigger size is smaller (larger) than ratio bound \n')
         
             f.write(f'Trojans: {trojan_classes}')
             

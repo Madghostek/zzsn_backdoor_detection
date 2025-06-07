@@ -7,7 +7,7 @@
 
 
 import torch 
-from dataset import CustomDataSet, ImageFolderDataset
+from dataset import CustomDataSet
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import numpy as np
@@ -17,7 +17,7 @@ import numpy as np
 def Pre_Screening(args,model, transform):
     device = args.device
 
-    dataset = ImageFolderDataset(args.examples_dirpath,transform=transform)
+    dataset = CustomDataSet(args.examples_dirpath,transform=transform,triggered_classes=[])
     data_loader = DataLoader(dataset=dataset,batch_size = args.batch_size,shuffle=True,drop_last=False,num_workers=2,pin_memory=True)
     acc = 0
     for idx, (img,name,label) in enumerate(data_loader):
